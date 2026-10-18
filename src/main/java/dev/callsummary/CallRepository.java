@@ -2,8 +2,10 @@ package dev.callsummary;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -25,6 +27,15 @@ public class CallRepository {
             SELECT call_id, status, size_bytes, content_type, created_at
               FROM calls WHERE call_id = ? AND user_id = ?
             """, this::map, callId, userId).stream().findFirst();
+    }
+
+    public List<CallRecord> findAll(UUID userId) {
+    return jdbc.query("""
+        SELECT call_id, status, size_bytes, content_type, created_at
+          FROM calls
+         WHERE user_id = ?
+         ORDER BY created_at DESC
+        """, this::map, userId);
     }
 
     private CallRecord map(ResultSet rs, int rowNum) throws SQLException {

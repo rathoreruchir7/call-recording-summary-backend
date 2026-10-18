@@ -6,11 +6,14 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -61,6 +64,10 @@ public class CallService {
 
     public CallRecord get(UUID callId) {
         return repository.find(callId, demoUserId).orElseThrow(CallNotFoundException::new);
+    }
+
+    public List<CallRecord> list() {
+        return repository.findAll(demoUserId);
     }
 
     private static MessageDigest sha256() {
