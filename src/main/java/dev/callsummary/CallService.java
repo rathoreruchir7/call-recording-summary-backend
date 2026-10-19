@@ -25,18 +25,17 @@ public class CallService {
     private static final Set<String> ALLOWED_TYPES = Set.of("audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp4", "audio/ogg");
     private final S3Client s3;
     private final CallRepository repository;
-    private final CallProcessingService processingService;
+    private final ProcessingJobRepository jobRepository;
     private final SummaryRepository summaryRepository;
     private final String bucket;
     private final UUID demoUserId;
 
     public CallService(S3Client s3, CallRepository repository,
-                       CallProcessingService processingService, SummaryRepository summaryRepository,
-                       @Value("${app.bucket}") String bucket,
-                       @Value("${app.demo-user-id}") UUID demoUserId) {
+            ProcessingJobRepository jobRepository, SummaryRepository summaryRepository,
+            @Value("${app.bucket}") String bucket, @Value("${app.demo-user-id}") UUID demoUserId) {
         this.s3 = s3;
         this.repository = repository;
-        this.processingService = processingService;
+        this.jobRepository = jobRepository;
         this.summaryRepository = summaryRepository;
         this.bucket = bucket;
         this.demoUserId = demoUserId;
@@ -57,6 +56,7 @@ public class CallService {
         }
         try {
             repository.insert(callId, demoUserId, key, contentType, bytes, HexFormat.of().formatHex(digest.digest()));
+            jobRepository.create(callId, demoUserId);
         } catch (RuntimeException databaseError) {
             try {
                 s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
@@ -65,9 +65,7 @@ public class CallService {
             }
             throw databaseError;
         }
-        CallRecord uploadedCall = repository.find(callId, demoUserId).orElseThrow();
-        processingService.process(callId, demoUserId);
-        return uploadedCall;
+        return repository.find(callId, demoUserId).orElseThrow();
     }
 
     public CallRecord get(UUID callId) {
@@ -76,8 +74,7 @@ public class CallService {
 
     public SummaryRecord getSummary(UUID callId) {
         get(callId);
-        return summaryRepository.findByCallId(callId, demoUserId)
-                .orElseThrow(SummaryNotReadyException::new);
+        return summaryRepository.findByCallId(callId, demoUserId).orElseThrow(SummaryNotReadyException::new);
     }
 
     public List<CallRecord> list() {

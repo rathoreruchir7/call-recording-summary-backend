@@ -82,3 +82,18 @@ The transcript cap is a first guard. A real LLM integration should next estimate
 ## Known limits
 
 This project uses one configured demo user and has no authentication. It also does not yet inspect actual audio duration or file bytes, persist detailed failure reasons, retry processing after restart, or call a real speech-to-text or LLM provider.
+## Optional hosted OpenAI mode
+
+The default is `AI_PROVIDER=demo`, which makes no external AI request. To use real transcription and summarization, set these environment variables before starting the application:
+
+```powershell
+$env:AI_PROVIDER = "openai"
+$env:OPENAI_API_KEY = "your_key_here"
+$env:OPENAI_TRANSCRIPTION_MODEL = "gpt-transcribe"
+$env:OPENAI_SUMMARY_MODEL = "gpt-5.2"
+```
+
+Do not put the API key in `application.yml`, Git, Postman, or this README. The OpenAI providers stream the recording from MinIO to the transcription endpoint and send only the resulting transcript to the summary endpoint. The Responses request sets `store: false`.
+
+For the default `gpt-5.2` summary model, the configured prices are $1.75 per million input tokens and $14 per million output tokens. If you choose another model, set `LLM_INPUT_COST_PER_MILLION_TOKENS` and `LLM_OUTPUT_COST_PER_MILLION_TOKENS` to that model’s current prices before starting the application. The app uses them with the configured input, output, and per-call limits to reject an over-budget request before the summary API call.
+

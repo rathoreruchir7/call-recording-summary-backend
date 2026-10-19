@@ -22,9 +22,9 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 class CallServiceTest {
     private final S3Client s3 = mock(S3Client.class);
     private final CallRepository repository = mock(CallRepository.class);
-    private final CallProcessingService processingService = mock(CallProcessingService.class);
+    private final ProcessingJobRepository jobRepository = mock(ProcessingJobRepository.class);
     private final SummaryRepository summaryRepository = mock(SummaryRepository.class);
-    private final CallService service = new CallService(s3, repository, processingService, summaryRepository, "test-bucket", UUID.randomUUID());
+    private final CallService service = new CallService(s3, repository, jobRepository, summaryRepository, "test-bucket", UUID.randomUUID());
 
     @Test
     void savesMetadataOnlyAfterS3Acknowledges() throws Exception {
@@ -60,3 +60,4 @@ class CallServiceTest {
                 any(String.class), org.mockito.ArgumentMatchers.anyLong(), any(String.class));
     }
 }
+

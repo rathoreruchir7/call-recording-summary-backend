@@ -28,3 +28,18 @@ CREATE TABLE IF NOT EXISTS summaries (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS processing_jobs (
+  job_id UUID PRIMARY KEY,
+  call_id UUID NOT NULL UNIQUE REFERENCES calls(call_id),
+  user_id UUID NOT NULL,
+  status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED')),
+  attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+  max_attempts INTEGER NOT NULL DEFAULT 3 CHECK (max_attempts > 0),
+  last_error TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS processing_jobs_pending_idx
+  ON processing_jobs(status, created_at)
+  WHERE status = 'PENDING';
