@@ -77,11 +77,11 @@ The transcript cap is a first guard. A real LLM integration should next estimate
 
 ## Provider design
 
-`SpeechToTextProvider` and `SummaryGenerator` are interfaces. The current `DemoSpeechToTextProvider` and `DemoSummaryGenerator` implementations are safe local placeholders. A real provider can be added by creating a new implementation of either interface and keeping credentials in environment variables, never in source code.
+`SpeechToTextProvider` and `SummaryGenerator` are interfaces. The `DemoSpeechToTextProvider` and `DemoSummaryGenerator` implementations are safe local placeholders. The OpenAI and Groq implementations are selected through configuration and keep credentials in environment variables, never in source code.
 
 ## Known limits
 
-This project uses one configured demo user and has no authentication. It also does not yet inspect actual audio duration or file bytes, persist detailed failure reasons, retry processing after restart, or call a real speech-to-text or LLM provider.
+This project uses one configured demo user and has no authentication. It also does not yet inspect actual audio duration or file bytes, provide user authentication, or use a durable external queue when deployed across multiple application instances.
 ## Optional hosted OpenAI mode
 
 The default is `AI_PROVIDER=demo`, which makes no external AI request. To use real transcription and summarization, set these environment variables before starting the application:
@@ -97,3 +97,16 @@ Do not put the API key in `application.yml`, Git, Postman, or this README. The O
 
 For the default `gpt-5.2` summary model, the configured prices are $1.75 per million input tokens and $14 per million output tokens. If you choose another model, set `LLM_INPUT_COST_PER_MILLION_TOKENS` and `LLM_OUTPUT_COST_PER_MILLION_TOKENS` to that model’s current prices before starting the application. The app uses them with the configured input, output, and per-call limits to reject an over-budget request before the summary API call.
 
+
+## Optional hosted Groq mode
+
+Groq mode uses hosted speech-to-text and a hosted text model. Create a Groq API key, keep it outside the repository, and set these environment variables before starting the application:
+
+```powershell
+$env:AI_PROVIDER = "groq"
+$env:GROQ_API_KEY = "your_key_here"
+$env:GROQ_TRANSCRIPTION_MODEL = "whisper-large-v3-turbo"
+$env:GROQ_SUMMARY_MODEL = "openai/gpt-oss-20b"
+```
+
+The implementation sends audio to Groq's transcription endpoint and then sends the resulting transcript to Groq's chat-completions endpoint. Groq free-tier limits can still return HTTP 429, which the existing processing job records and retries according to its retry rules.

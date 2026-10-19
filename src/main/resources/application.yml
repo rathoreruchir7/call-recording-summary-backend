@@ -32,3 +32,7 @@ app:
     api-key: ${OPENAI_API_KEY:}
     transcription-model: ${OPENAI_TRANSCRIPTION_MODEL:gpt-transcribe}
     summary-model: ${OPENAI_SUMMARY_MODEL:gpt-5.2}
+  groq:
+    api-key: ${GROQ_API_KEY:}
+    transcription-model: ${GROQ_TRANSCRIPTION_MODEL:whisper-large-v3-turbo}
+    summary-model: ${GROQ_SUMMARY_MODEL:openai/gpt-oss-20b}
