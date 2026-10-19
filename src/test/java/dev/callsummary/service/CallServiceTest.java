@@ -1,4 +1,10 @@
-package dev.callsummary;
+package dev.callsummary.service;
+
+import dev.callsummary.exception.InvalidRecordingException;
+import dev.callsummary.model.CallRecord;
+import dev.callsummary.repository.CallRepository;
+import dev.callsummary.repository.ProcessingJobRepository;
+import dev.callsummary.repository.SummaryRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

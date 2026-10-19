@@ -1,4 +1,5 @@
-package dev.callsummary;
+package dev.callsummary.ai;
+
 
 import java.io.IOException;
 import java.io.InputStream;

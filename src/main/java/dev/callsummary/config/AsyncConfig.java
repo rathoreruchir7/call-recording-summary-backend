@@ -1,4 +1,5 @@
-package dev.callsummary;
+package dev.callsummary.config;
+
 
 import java.util.concurrent.Executor;
 

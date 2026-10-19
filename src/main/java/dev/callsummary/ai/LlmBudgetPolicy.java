@@ -1,4 +1,7 @@
-package dev.callsummary;
+package dev.callsummary.ai;
+
+import dev.callsummary.exception.LlmBudgetExceededException;
+
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

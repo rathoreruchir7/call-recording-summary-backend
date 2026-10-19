@@ -1,4 +1,5 @@
-package dev.callsummary;
+package dev.callsummary.config;
+
 
 import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;

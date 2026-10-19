@@ -1,4 +1,14 @@
-package dev.callsummary;
+package dev.callsummary.service;
+
+import dev.callsummary.exception.CallNotFoundException;
+import dev.callsummary.exception.InvalidRecordingException;
+import dev.callsummary.exception.SummaryNotReadyException;
+import dev.callsummary.model.CallRecord;
+import dev.callsummary.model.SummaryRecord;
+import dev.callsummary.repository.CallRepository;
+import dev.callsummary.repository.ProcessingJobRepository;
+import dev.callsummary.repository.SummaryRepository;
+
 
 import java.io.IOException;
 import java.io.InputStream;

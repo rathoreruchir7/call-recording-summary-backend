@@ -1,4 +1,7 @@
-package dev.callsummary;
+package dev.callsummary.repository;
+
+import dev.callsummary.model.ProcessingJobRecord;
+
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

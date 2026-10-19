@@ -1,4 +1,5 @@
-package dev.callsummary;
+package dev.callsummary.ai;
+
 
 public record LlmRequestPlan(
         int estimatedInputTokens,
