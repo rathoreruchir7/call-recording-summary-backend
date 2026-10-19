@@ -22,7 +22,9 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 class CallServiceTest {
     private final S3Client s3 = mock(S3Client.class);
     private final CallRepository repository = mock(CallRepository.class);
-    private final CallService service = new CallService(s3, repository, "test-bucket", UUID.randomUUID());
+    private final CallProcessingService processingService = mock(CallProcessingService.class);
+    private final SummaryRepository summaryRepository = mock(SummaryRepository.class);
+    private final CallService service = new CallService(s3, repository, processingService, summaryRepository, "test-bucket", UUID.randomUUID());
 
     @Test
     void savesMetadataOnlyAfterS3Acknowledges() throws Exception {

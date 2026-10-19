@@ -1,35 +1,84 @@
-# Spring Boot call recording backend — milestone 1
+# Call recording summary backend
 
-This is a **new Spring Boot project**, separate from the earlier Node.js example. It implements only the first milestone: upload an audio recording, store it in S3-compatible MinIO, save metadata in PostgreSQL, and retrieve the call record. It does **not** transcribe or summarize yet.
+A learning project that simulates an Android call-recording sync backend. It is not Samsung proprietary code.
 
-## Small design
+The project accepts an audio upload, stores it in S3-compatible MinIO, saves its metadata in PostgreSQL, then starts background processing. The current transcription and summary providers are local demos, so the project runs without an AI key or paid provider.
 
-`POST /call` receives a multipart field named `file`. Spring limits the upload to 20 MB. The service checks size and declared audio MIME type, generates a call ID and private S3 object key, and sends the multipart input stream to S3 using its known length. **Only after S3's `putObject` returns successfully** does it insert the metadata row in PostgreSQL. If the database insert fails, it attempts to delete the S3 object. `GET /call/{id}` reads the row and returns metadata, never a public S3 URL.
+## Flow
 
-The database row has `call_id`, `user_id`, `recording_object_key`, `content_type`, `size_bytes`, `sha256`, `status`, and `created_at`. For this learning milestone, one fixed demo user ID is configured; there is no real authentication. The status is `UPLOADED` because background processing is a later milestone.
-
-## Run
-
-Requires Docker Desktop with its engine running. The first build compiles MinIO from its pinned official source release and may take several minutes. From this directory:
-
-```powershell
-docker compose up --build
+```text
+Client POST /call
+  → Spring Boot validates the upload and streams it to MinIO
+  → PostgreSQL stores the call metadata and private object key
+  → background processing reads the recording stream back from MinIO
+  → speech-to-text provider returns a transcript
+  → transcript size limit is checked
+  → summary provider creates a summary
+  → PostgreSQL stores transcript and summary
 ```
 
-The API is at `http://localhost:8080`, and MinIO's local console is at `http://localhost:9001` (`localminio` / `change-this-local-secret`). In another terminal, upload a WAV file:
+The call status moves through:
 
-```powershell
-curl.exe -X POST -F "file=@C:\path\to\recording.wav;type=audio/wav" http://localhost:8080/call
+```text
+UPLOADED → TRANSCRIBING → SUMMARIZING → READY
+                              ↘ FAILED
 ```
 
-The response contains `callId`. Read it with:
+## Local setup
+
+Start PostgreSQL and MinIO from the project directory:
 
 ```powershell
-curl.exe http://localhost:8080/call/YOUR_CALL_ID
+docker compose up -d postgres minio
 ```
 
-Run unit tests with `mvn test` if Maven is installed. The Docker build runs compilation; the current environment could not run Docker because its engine was unavailable, and Maven was not installed, so the complete application has **not yet been verified end to end**.
+Then start `CallApplication.java` from VS Code. The API runs at `http://localhost:8080`.
 
-## Boundaries for the next milestone
+MinIO's local console is `http://localhost:9001`.
 
-The MIME type is client supplied; production validation should inspect the actual audio bytes and duration before storage. This milestone also lacks authentication, upload concurrency quotas, retry reconciliation, and the transcription/summary worker. Those are explicit next steps, not hidden features. MinIO credentials and images here are only for local development.
+- Username: `localminio`
+- Password: `change-this-local-secret`
+
+These are local development credentials only.
+
+## API requests
+
+### Upload a recording
+
+`POST http://localhost:8080/call`
+
+In Postman, choose **Body → form-data** and add a key named `file`. Change its type from Text to File, then choose a WAV, MP3, M4A, or OGG file up to 20 MB.
+
+The response returns a `callId` and normally begins with status `UPLOADED`.
+
+### List calls
+
+`GET http://localhost:8080/call`
+
+### Get one call and its processing status
+
+`GET http://localhost:8080/call/{callId}`
+
+### Get transcript and summary
+
+`GET http://localhost:8080/call/{callId}/summary`
+
+A request made before processing finishes receives HTTP `409` with `Summary is not ready yet`.
+
+## Current safety controls
+
+- Spring rejects uploads over 20 MB.
+- The API permits declared WAV, MP3, M4A, and OGG content types.
+- Audio is streamed to MinIO instead of first being loaded as one large byte array.
+- The transcript is capped at 12,000 characters by `app.max-transcript-characters`.
+- A processing failure sets the call status to `FAILED` and prevents a summary from being saved.
+
+The transcript cap is a first guard. A real LLM integration should next estimate input tokens and cost, reserve a budget before sending, cap output tokens, split permitted long transcripts into chunks, and retry failures with a durable queue.
+
+## Provider design
+
+`SpeechToTextProvider` and `SummaryGenerator` are interfaces. The current `DemoSpeechToTextProvider` and `DemoSummaryGenerator` implementations are safe local placeholders. A real provider can be added by creating a new implementation of either interface and keeping credentials in environment variables, never in source code.
+
+## Known limits
+
+This project uses one configured demo user and has no authentication. It also does not yet inspect actual audio duration or file bytes, persist detailed failure reasons, retry processing after restart, or call a real speech-to-text or LLM provider.

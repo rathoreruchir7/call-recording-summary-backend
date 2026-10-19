@@ -25,13 +25,21 @@ public class CallService {
     private static final Set<String> ALLOWED_TYPES = Set.of("audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp4", "audio/ogg");
     private final S3Client s3;
     private final CallRepository repository;
+    private final CallProcessingService processingService;
+    private final SummaryRepository summaryRepository;
     private final String bucket;
     private final UUID demoUserId;
 
     public CallService(S3Client s3, CallRepository repository,
+                       CallProcessingService processingService, SummaryRepository summaryRepository,
                        @Value("${app.bucket}") String bucket,
                        @Value("${app.demo-user-id}") UUID demoUserId) {
-        this.s3 = s3; this.repository = repository; this.bucket = bucket; this.demoUserId = demoUserId;
+        this.s3 = s3;
+        this.repository = repository;
+        this.processingService = processingService;
+        this.summaryRepository = summaryRepository;
+        this.bucket = bucket;
+        this.demoUserId = demoUserId;
     }
 
     public CallRecord upload(MultipartFile file) throws IOException {
@@ -44,8 +52,6 @@ public class CallService {
         String key = "calls/" + demoUserId + "/" + callId + "/recording";
         MessageDigest digest = sha256();
         try (InputStream input = new DigestInputStream(file.getInputStream(), digest)) {
-            // RequestBody uses the known multipart length. The SDK reads the stream in chunks.
-            // A successful return is S3's acknowledgement; failure throws an exception.
             s3.putObject(PutObjectRequest.builder().bucket(bucket).key(key).contentType(contentType).build(),
                     RequestBody.fromInputStream(input, bytes));
         }
@@ -59,11 +65,19 @@ public class CallService {
             }
             throw databaseError;
         }
-        return repository.find(callId, demoUserId).orElseThrow();
+        CallRecord uploadedCall = repository.find(callId, demoUserId).orElseThrow();
+        processingService.process(callId, demoUserId);
+        return uploadedCall;
     }
 
     public CallRecord get(UUID callId) {
         return repository.find(callId, demoUserId).orElseThrow(CallNotFoundException::new);
+    }
+
+    public SummaryRecord getSummary(UUID callId) {
+        get(callId);
+        return summaryRepository.findByCallId(callId, demoUserId)
+                .orElseThrow(SummaryNotReadyException::new);
     }
 
     public List<CallRecord> list() {

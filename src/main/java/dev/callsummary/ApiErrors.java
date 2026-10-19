@@ -13,6 +13,10 @@ class InvalidRecordingException extends RuntimeException {
 
 class CallNotFoundException extends RuntimeException {}
 
+class SummaryNotReadyException extends RuntimeException {}
+
+class TranscriptTooLargeException extends RuntimeException {}
+
 @RestControllerAdvice
 public class ApiErrors {
     @ExceptionHandler(InvalidRecordingException.class)
@@ -23,6 +27,12 @@ public class ApiErrors {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<Map<String, String>> tooLarge() {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("error", "Recording exceeds upload limit"));
+    }
+
+    @ExceptionHandler(SummaryNotReadyException.class)
+    ResponseEntity<Map<String, String>> summaryNotReady() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", "Summary is not ready yet"));
     }
 
     @ExceptionHandler(CallNotFoundException.class)

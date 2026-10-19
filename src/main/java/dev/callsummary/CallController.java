@@ -31,6 +31,9 @@ public class CallController {
         return Map.of("calls", service.list());
     }
 
+    @GetMapping("/{id}/summary")
+    public SummaryRecord getSummary(@PathVariable UUID id) { return service.getSummary(id); }
+
     @GetMapping("/{id}")
     public CallRecord get(@PathVariable UUID id) { return service.get(id); }
 }

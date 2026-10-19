@@ -29,13 +29,28 @@ public class CallRepository {
             """, this::map, callId, userId).stream().findFirst();
     }
 
+    public Optional<String> findRecordingObjectKey(UUID callId, UUID userId) {
+        return jdbc.queryForList("""
+            SELECT recording_object_key
+              FROM calls WHERE call_id = ? AND user_id = ?
+            """, String.class, callId, userId).stream().findFirst();
+    }
+
     public List<CallRecord> findAll(UUID userId) {
-    return jdbc.query("""
-        SELECT call_id, status, size_bytes, content_type, created_at
-          FROM calls
-         WHERE user_id = ?
-         ORDER BY created_at DESC
-        """, this::map, userId);
+        return jdbc.query("""
+            SELECT call_id, status, size_bytes, content_type, created_at
+              FROM calls
+             WHERE user_id = ?
+             ORDER BY created_at DESC
+            """, this::map, userId);
+    }
+
+    public void updateStatus(UUID callId, UUID userId, String status) {
+        jdbc.update("""
+            UPDATE calls
+               SET status = ?
+             WHERE call_id = ? AND user_id = ?
+            """, status, callId, userId);
     }
 
     private CallRecord map(ResultSet rs, int rowNum) throws SQLException {
