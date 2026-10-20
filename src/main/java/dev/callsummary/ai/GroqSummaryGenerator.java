@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 @Component
 @ConditionalOnProperty(name = "app.ai.provider", havingValue = "groq")
 public class GroqSummaryGenerator implements SummaryGenerator {
-    private static final String SYSTEM_INSTRUCTIONS = "Summarize this call transcript. Be concise. Include key points, decisions, and action items. Do not invent details.";
+    private static final String SYSTEM_INSTRUCTIONS = "You are a call-summary service. Return only a concise summary of the transcript. Include key points, decisions, and action items. Do not ask the user for a transcript and do not invent details.";
 
     private final RestClient client;
     private final String model;
@@ -38,7 +38,7 @@ public class GroqSummaryGenerator implements SummaryGenerator {
                 "model", model,
                 "messages", List.of(
                         Map.of("role", "system", "content", SYSTEM_INSTRUCTIONS),
-                        Map.of("role", "user", "content", transcript)),
+                        Map.of("role", "user", "content", "Transcript to summarize:\n---\n" + transcript + "\n---\nReturn only the summary.")),
                 "max_completion_tokens", maxOutputTokens,
                 "temperature", 0.2);
 
