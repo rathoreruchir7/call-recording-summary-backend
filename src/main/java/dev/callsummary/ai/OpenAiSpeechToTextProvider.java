@@ -1,9 +1,7 @@
 package dev.callsummary.ai;
 
 
-import java.io.IOException;
-import java.io.InputStream;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
@@ -14,7 +12,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.io.InputStream;
 
 @Component
 @ConditionalOnProperty(name = "app.ai.provider", havingValue = "openai")
@@ -66,7 +65,8 @@ public class OpenAiSpeechToTextProvider implements SpeechToTextProvider {
     private String filenameFor(String contentType) {
         return switch (contentType) {
             case "audio/mpeg" -> "recording.mp3";
-            case "audio/mp4" -> "recording.m4a";
+            case "audio/mp4", "audio/m4a", "audio/x-m4a" -> "recording.m4a";
+            case "video/mp4" -> "recording.mp4";
             case "audio/ogg" -> "recording.ogg";
             default -> "recording.wav";
         };

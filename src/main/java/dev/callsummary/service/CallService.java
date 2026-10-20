@@ -32,7 +32,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 @Service
 public class CallService {
     static final long MAX_BYTES = 20L * 1024 * 1024;
-    private static final Set<String> ALLOWED_TYPES = Set.of("audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp4", "audio/ogg");
+    private static final Set<String> ALLOWED_TYPES = Set.of("audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp4", "audio/m4a", "audio/x-m4a", "video/mp4", "audio/ogg");
     private final S3Client s3;
     private final CallRepository repository;
     private final ProcessingJobRepository jobRepository;
@@ -55,7 +55,7 @@ public class CallService {
         long bytes = file.getSize();
         String contentType = file.getContentType();
         if (bytes <= 0 || bytes > MAX_BYTES || contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-            throw new InvalidRecordingException("Expected nonempty WAV, MP3, M4A, or OGG audio up to 20 MB");
+            throw new InvalidRecordingException("Expected nonempty WAV, MP3, M4A, MP4, or OGG audio up to 20 MB");
         }
         UUID callId = UUID.randomUUID();
         String key = "calls/" + demoUserId + "/" + callId + "/recording";

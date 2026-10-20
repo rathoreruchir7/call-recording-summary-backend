@@ -110,3 +110,14 @@ $env:GROQ_SUMMARY_MODEL = "openai/gpt-oss-20b"
 ```
 
 The implementation sends audio to Groq's transcription endpoint and then sends the resulting transcript to Groq's chat-completions endpoint. Groq free-tier limits can still return HTTP 429, which the existing processing job records and retries according to its retry rules.
+## React testing UI
+
+A small React UI is in `frontend/`. Keep the Spring Boot application and Docker services running, then open a second terminal in that folder:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open the URL printed by Vite, normally `http://localhost:5173`. The UI can upload audio, display processing status, list calls, and show the transcript and summary. Spring Boot permits this local browser origin through `WebConfig`.

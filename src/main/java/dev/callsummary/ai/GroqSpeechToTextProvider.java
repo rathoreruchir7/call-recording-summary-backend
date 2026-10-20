@@ -68,7 +68,8 @@ public class GroqSpeechToTextProvider implements SpeechToTextProvider {
     private String filenameFor(String contentType) {
         return switch (contentType) {
             case "audio/mpeg" -> "recording.mp3";
-            case "audio/mp4" -> "recording.m4a";
+            case "audio/mp4", "audio/m4a", "audio/x-m4a" -> "recording.m4a";
+            case "video/mp4" -> "recording.mp4";
             case "audio/ogg" -> "recording.ogg";
             default -> "recording.wav";
         };
