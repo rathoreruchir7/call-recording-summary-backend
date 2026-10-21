@@ -12,6 +12,7 @@ import dev.callsummary.repository.SummaryRepository;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -59,13 +60,11 @@ public class CallService {
         }
         UUID callId = UUID.randomUUID();
         String key = "calls/" + demoUserId + "/" + callId + "/recording";
-        MessageDigest digest = sha256();
-        try (InputStream input = new DigestInputStream(file.getInputStream(), digest)) {
-            s3.putObject(PutObjectRequest.builder().bucket(bucket).key(key).contentType(contentType).build(),
-                    RequestBody.fromInputStream(input, bytes));
-        }
+        String checksum = sha256Hex(file);
+        s3.putObject(PutObjectRequest.builder().bucket(bucket).key(key).contentType(contentType).build(),
+                RequestBody.fromContentProvider(() -> openInputStream(file), bytes, contentType));
         try {
-            repository.insert(callId, demoUserId, key, contentType, bytes, HexFormat.of().formatHex(digest.digest()));
+            repository.insert(callId, demoUserId, key, contentType, bytes, checksum);
             jobRepository.create(callId, demoUserId);
         } catch (RuntimeException databaseError) {
             try {
@@ -91,8 +90,24 @@ public class CallService {
         return repository.findAll(demoUserId);
     }
 
-    private static MessageDigest sha256() {
-        try { return MessageDigest.getInstance("SHA-256"); }
-        catch (NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
+    private static String sha256Hex(MultipartFile file) throws IOException {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        try (InputStream input = file.getInputStream()) {
+            input.transferTo(new java.security.DigestOutputStream(java.io.OutputStream.nullOutputStream(), digest));
+        }
+        return HexFormat.of().formatHex(digest.digest());
+    }
+
+    private static InputStream openInputStream(MultipartFile file) {
+        try {
+            return file.getInputStream();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }
