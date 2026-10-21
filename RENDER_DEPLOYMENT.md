@@ -64,6 +64,9 @@ S3_ENDPOINT=<object-storage-endpoint>
 S3_BUCKET=call-recordings
 S3_ACCESS_KEY=<object-storage-access-key>
 S3_SECRET_KEY=<object-storage-secret-key>
+S3_REGION=auto
+S3_FORCE_PATH_STYLE=true
+S3_CHUNKED_ENCODING_ENABLED=false
 CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
