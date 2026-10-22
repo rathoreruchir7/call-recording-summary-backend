@@ -124,6 +124,6 @@ Open the URL printed by Vite, normally `http://localhost:5173`. The UI can uploa
 
 ## Deploy the React UI on GitHub Pages
 
-In this repository's **Settings → Pages**, choose **GitHub Actions** as the deployment source. The workflow in `.github/workflows/deploy-frontend.yml` builds `frontend/` and publishes the resulting static site at `https://rathoreruchir7.github.io/call-recording-summary-backend/`. It runs when the frontend changes on `main`, and can also be started manually from the Actions tab. The production API URL is in `frontend/.env.production`; this is public browser configuration, so never put API keys there.
+In this repository's **Settings → Pages**, choose **GitHub Actions** as the deployment source. The workflow in `.github/workflows/deploy-frontend.yml` builds `frontend/` and publishes the resulting static site at `https://rathoreruchir7.github.io/call-summarizer/`. It runs when the frontend changes on `main`, and can also be started manually from the Actions tab. The production API URL is in `frontend/.env.production`; this is public browser configuration, so never put API keys there.
 
 The backend's default CORS origins include both the GitHub Pages host and `http://localhost:5173`. Render automatically redeploys the backend after the code is pushed. CORS origins contain only the scheme and host, not the GitHub Pages repository path. The frontend retries while a sleeping free backend wakes up.
